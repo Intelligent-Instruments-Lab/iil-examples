@@ -25,14 +25,16 @@ def main(host="127.0.0.1", receive_port=8888, send_port=7770):
         print("Resetting MRP...")
         nonlocal mrp
         mrp = MRP(osc)
+
+    reset(None)
     
     @repeat(1)
     def _():
         nonlocal note_on, note
         if note_on == False:
             mrp.note_on(note)
-            mrp.quality_update(note, 'brightness', 1)
-            mrp.quality_update(note, 'intensity', 1)
+            mrp.set_note_quality(note, 'brightness', 1)
+            mrp.set_note_quality(note, 'intensity', 1)
             note_on = True
         else:
             mrp.note_off(note)
@@ -41,8 +43,6 @@ def main(host="127.0.0.1", receive_port=8888, send_port=7770):
     @cleanup
     def _():
         mrp.cleanup()
-
-    reset(None)
 
 if __name__=='__main__':
     run(main)

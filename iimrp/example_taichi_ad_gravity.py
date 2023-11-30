@@ -84,7 +84,7 @@ def main(host="127.0.0.1", receive_port=7563, send_port=7770):
         frame_count+=1
         if frame_count == osc_send_every:
             for i, n in enumerate(notes):
-                mrp.qualities_update(n, {
+                mrp.set_note_qualities(n, {
                     'intensity':  _x[i][0],
                     'brightness': _x[i][1],
                     'pitch':      1-_x[i][0]

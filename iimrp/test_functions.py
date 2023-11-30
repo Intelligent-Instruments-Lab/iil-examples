@@ -39,13 +39,13 @@ def main(host="127.0.0.1", receive_port=8888, send_port=7770):
             count+=1
             if test == 'code':
                 mrp.note_on(note)
-                mrp.quality_update(note, 'brightness', 0.5+count/10)
-                mrp.quality_update(note, 'intensity', 1.9)
-                mrp.quality_update(note, 'brightness', 1.5, relative=True)
-                mrp.quality_update(note, 'intensity', 1.9, relative=True)
-                mrp.quality_update(note, 'harmonics_raw', [1.1, 0.2, 0.3])
-                mrp.quality_update(note, 'harmonics_raw', [i/10 for i in range(0, count, 1)])
-                mrp.qualities_update(note, {
+                mrp.set_note_quality(note, 'brightness', 0.5+count/10)
+                mrp.set_note_quality(note, 'intensity', 1.9)
+                mrp.set_note_quality(note, 'brightness', 1.5, relative=True)
+                mrp.set_note_quality(note, 'intensity', 1.9, relative=True)
+                mrp.set_note_quality(note, 'harmonics_raw', [1.1, 0.2, 0.3])
+                mrp.set_note_quality(note, 'harmonics_raw', [i/10 for i in range(0, count, 1)])
+                mrp.set_note_qualities(note, {
                     'brightness': 1.5,
                     'intensity': 1.0,
                     'harmonics_raw': [1.2, 0.3, 0.4]
@@ -55,7 +55,7 @@ def main(host="127.0.0.1", receive_port=8888, send_port=7770):
                 print(len(mrp.voices), 'voices:', mrp.voices)
             elif test == 'qualities':
                 mrp.note_on(note)
-                mrp.quality_update(qualities[0], count/10)
+                mrp.set_note_quality(qualities[0], count/10)
             note_on = True
         else:
             if test == 'code':

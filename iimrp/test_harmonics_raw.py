@@ -34,8 +34,8 @@ def main(host="127.0.0.1", receive_port=8888, send_port=7770):
     @repeat(0.1)
     def _():
         nonlocal note, count, counter
-        mrp.quality_update(note, 'intensity', 1)
-        mrp.quality_update(note, 'harmonics_raw', [counter/count, 0, 0, 0, 0, 0, 0, 0])
+        mrp.set_note_quality(note, 'intensity', 1)
+        mrp.set_note_quality(note, 'harmonics_raw', [counter/count, 0, 0, 0, 0, 0, 0, 0])
         counter+=1
         if counter == count:
             mrp.note_off(note)
