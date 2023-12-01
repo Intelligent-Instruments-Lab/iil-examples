@@ -50,9 +50,10 @@ def main(host="127.0.0.1", receive_port=8888, send_port=7770):
             print(f"turning note {note} off.")
             mrp.note_off(note)
             note = random.randint(21, 108)
-            print(note, type(note))
+            mrp.note_on(note)
             counter=0
         print(f"{counter}/{count}, note: {note}, pitch: {pitch_arr[counter]}")
+        print(f"note {note} qualities: {mrp.get_note_qualities(note)}")
 
     @cleanup
     def _():
