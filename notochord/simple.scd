@@ -32,7 +32,6 @@ b.sendMsg("/notochord/feed", 1, 67, 0, 0);
 // there are also 'anonymous' parts, numbered 257-288 (melodic) and 289-320 (drums)
 
 ////////// QUERY //////////
-OSCdef.trace(false)
 // use query to ask notochord for predictions on the next event in the stream
 (
 OSCdef(\notoreturn, { arg msg;
@@ -53,13 +52,15 @@ b.sendMsg("/notochord/query", \next_inst, 1, \min_vel, 1)
 // 2.5, which would be in the past:
 b.sendMsg("/notochord/query", \min_time, 2.5)
 
+// note that 'step' doesn't increment in the returned value when you run the above.
 // by default, notochord doesn't 'feed' the events you query --
 // since you might want to mess with the predictions first,
 // or do something other than actually play them.
 // if you *do* want to accept notochord's prediction, you can do it in one call with
 // query_feed, which feeds the result of the query internally:
-b.sendMsg("/notochord/query_feed", \min_time, 2.5)
-// query_feed accepts all the same parameters as query
+b.sendMsg("/notochord/query_feed", \include_pitch, [66,69,70])
+// query_feed accepts all the same parameters as query,
+// here include_pitch is a soft constraint which whitelists certain MIDI numbers
 
 // there is also feed_query which accepts the 4 positional arguments to feed,
 // followed by any of the key-value pairs of argments to query.
