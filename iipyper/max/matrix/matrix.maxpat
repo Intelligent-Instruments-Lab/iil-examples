@@ -45,7 +45,7 @@
 					"numinlets" : 1,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 446.0, 185.0, 114.0, 22.0 ],
+					"patching_rect" : [ 408.0, 193.0, 114.0, 22.0 ],
 					"text" : "prepend /matrixjson"
 				}
 
@@ -57,7 +57,7 @@
 					"numinlets" : 1,
 					"numoutlets" : 2,
 					"outlettype" : [ "bang", "" ],
-					"patching_rect" : [ 464.5, 94.0, 29.5, 22.0 ],
+					"patching_rect" : [ 426.5, 102.0, 29.5, 22.0 ],
 					"text" : "t b l"
 				}
 
@@ -65,13 +65,13 @@
 , 			{
 				"box" : 				{
 					"id" : "obj-28",
-					"linecount" : 16,
+					"linecount" : 11,
 					"maxclass" : "message",
 					"numinlets" : 2,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 437.0, 225.0, 204.0, 223.0 ],
-					"text" : "\"{\n\t\\\"data\\\" : [ 0.973290205001831, 0.745282769203186, 0.668210029602051, 0.082739472389221, 0.787080764770508, 0.476781725883484, 0.456503987312317, 0.166283130645752, 0.294840216636658, 0.886582851409912, 0.18754518032074, 0.508075475692749 ],\n\t\\\"shape\\\" : [ 3, 4 ]\n}\n\""
+					"patching_rect" : [ 399.0, 233.0, 247.0, 156.0 ],
+					"text" : "\"{\n\t\\\"data\\\" : [ 0.675499796867371, 0.16618275642395, 0.219438672065735, 0.597964286804199, 0.371294856071472, 0.437104463577271, 0.102174043655396, 0.116817593574524, 0.671746730804443, 0.148982048034668, 0.210307002067566, 0.129418611526489 ],\n\t\\\"shape\\\" : [ 3, 4 ]\n}\n\""
 				}
 
 			}
@@ -82,7 +82,7 @@
 					"numinlets" : 1,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 446.0, 157.0, 145.0, 22.0 ],
+					"patching_rect" : [ 408.0, 165.0, 145.0, 22.0 ],
 					"text" : "dict.serialize @mode json"
 				}
 
@@ -94,7 +94,7 @@
 					"numinlets" : 1,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 464.5, 65.0, 108.0, 22.0 ],
+					"patching_rect" : [ 426.5, 73.0, 108.0, 22.0 ],
 					"text" : "prepend set shape"
 				}
 
@@ -106,7 +106,7 @@
 					"numinlets" : 1,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 446.0, 35.0, 99.0, 22.0 ],
+					"patching_rect" : [ 408.0, 43.0, 99.0, 22.0 ],
 					"text" : "prepend set data"
 				}
 
@@ -118,7 +118,7 @@
 					"numinlets" : 2,
 					"numoutlets" : 4,
 					"outlettype" : [ "dictionary", "", "", "" ],
-					"patching_rect" : [ 446.0, 130.0, 95.0, 22.0 ],
+					"patching_rect" : [ 408.0, 138.0, 95.0, 22.0 ],
 					"saved_object_attributes" : 					{
 						"embed" : 0,
 						"parameter_enable" : 0,
@@ -136,7 +136,7 @@
 					"numinlets" : 1,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 262.0, 185.0, 108.0, 22.0 ],
+					"patching_rect" : [ 208.0, 169.0, 108.0, 22.0 ],
 					"text" : "prepend /matrixflat"
 				}
 
@@ -147,7 +147,7 @@
 					"maxclass" : "newobj",
 					"numinlets" : 1,
 					"numoutlets" : 0,
-					"patching_rect" : [ 262.0, 335.0, 138.0, 22.0 ],
+					"patching_rect" : [ 208.0, 319.0, 138.0, 22.0 ],
 					"text" : "udpsend 127.0.0.1 9999"
 				}
 
@@ -160,8 +160,8 @@
 					"numinlets" : 2,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 185.0, 225.0, 179.0, 76.0 ],
-					"text" : "/matrixflat 3 4 0.97329 0.745283 0.66821 0.082739 0.787081 0.476782 0.456504 0.166283 0.29484 0.886583 0.187545 0.508075"
+					"patching_rect" : [ 187.5, 209.0, 179.0, 76.0 ],
+					"text" : "/matrixflat 3 4 0.6755 0.166183 0.219439 0.597964 0.371295 0.437104 0.102174 0.116818 0.671747 0.148982 0.210307 0.129419"
 				}
 
 			}
@@ -172,7 +172,7 @@
 					"numinlets" : 1,
 					"numoutlets" : 2,
 					"outlettype" : [ "bang", "" ],
-					"patching_rect" : [ 262.0, 86.0, 29.5, 22.0 ],
+					"patching_rect" : [ 208.0, 70.0, 29.5, 22.0 ],
 					"text" : "t b l"
 				}
 
@@ -184,7 +184,7 @@
 					"numinlets" : 1,
 					"numoutlets" : 3,
 					"outlettype" : [ "", "", "" ],
-					"patching_rect" : [ 262.0, 119.0, 65.0, 22.0 ],
+					"patching_rect" : [ 208.0, 103.0, 65.0, 22.0 ],
 					"text" : "getattr dim"
 				}
 
@@ -196,7 +196,7 @@
 					"numinlets" : 2,
 					"numoutlets" : 2,
 					"outlettype" : [ "", "" ],
-					"patching_rect" : [ 262.0, 152.0, 39.0, 22.0 ],
+					"patching_rect" : [ 208.0, 136.0, 39.0, 22.0 ],
 					"text" : "zl.join"
 				}
 
@@ -208,7 +208,7 @@
 					"numinlets" : 1,
 					"numoutlets" : 2,
 					"outlettype" : [ "", "" ],
-					"patching_rect" : [ 262.0, 59.0, 41.0, 22.0 ],
+					"patching_rect" : [ 208.0, 43.0, 41.0, 22.0 ],
 					"text" : "jit.spill"
 				}
 
