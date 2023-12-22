@@ -8,14 +8,21 @@ Authors:
 from iipyper import OSC, run, repeat, cleanup
 from iimrp import MRP
 
-def main(host="127.0.0.1", receive_port=8888, send_port=7770):
+def main(**kwargs):
+
+    host = kwargs.get('host', '127.0.0.1')
+    receive_port = kwargs.get('receive_port', 8888)
+    send_port = kwargs.get('send_port', 7770)
+    start = kwargs.get('start', 21)
+    end = kwargs.get('end', 108)
+    print(f"start: {start}, end: {end}")
 
     osc = OSC(host, receive_port, send_port)
     osc.create_client("mrp", port=send_port)
 
     mrp = None
     note_on = False
-    note = 0
+    note = start
 
     @osc.args(return_port=7777)
     def reset(address, kind=None):
@@ -30,17 +37,18 @@ def main(host="127.0.0.1", receive_port=8888, send_port=7770):
     
     @repeat(0.125)
     def _():
-        nonlocal note_on, note
-        current = (note % 88) + 21
+        nonlocal note_on, note, start, end
         if note_on == False:
-            mrp.note_on(current, 127)
-            mrp.set_note_quality(current, 'intensity', 1)
+            mrp.note_on(note, 127)
+            mrp.set_note_quality(note, 'intensity', 1)
             note_on = True
         else:
-            mrp.note_off(current)
+            mrp.note_off(note)
             note_on = False
             note+=1
-        print(current, mrp.voices)
+        if note > end:
+            note = start
+        print(note, mrp.voices)
 
     @cleanup
     def _():

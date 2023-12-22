@@ -8,13 +8,17 @@ Authors:
 from iipyper import OSC, run, repeat, cleanup
 from iimrp import MRP
 
-def main(host="127.0.0.1", receive_port=8888, send_port=7770):
+def main(**kwargs):
+
+    host = kwargs.get('host', '127.0.0.1')
+    receive_port = kwargs.get('receive_port', 8888)
+    send_port = kwargs.get('send_port', 7770)
+    note = kwargs.get('note', 60)
 
     osc = OSC(host, receive_port, send_port)
     osc.create_client("mrp", port=send_port)
 
     mrp = None
-    note = 48
     note_on = False
 
     @osc.args(return_port=7777)
@@ -33,7 +37,6 @@ def main(host="127.0.0.1", receive_port=8888, send_port=7770):
         nonlocal note_on, note
         if note_on == False:
             mrp.note_on(note)
-            mrp.set_note_quality(note, 'brightness', 1)
             mrp.set_note_quality(note, 'intensity', 1)
             note_on = True
         else:
