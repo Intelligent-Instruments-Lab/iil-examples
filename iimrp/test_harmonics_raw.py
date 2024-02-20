@@ -7,6 +7,7 @@ Authors:
 
 from iipyper import OSC, run, repeat, cleanup
 from iimrp import MRP
+import random
 
 def main(host="127.0.0.1", receive_port=8888, send_port=7770):
 
@@ -15,7 +16,9 @@ def main(host="127.0.0.1", receive_port=8888, send_port=7770):
 
     mrp = None
     note_on = False
-    note = 0
+    note = 48
+    count = 100 # frames
+    counter = 0
 
     @osc.args(return_port=7777)
     def reset(address, kind=None):
@@ -23,23 +26,23 @@ def main(host="127.0.0.1", receive_port=8888, send_port=7770):
         reset the mrp
         """
         print("Resetting MRP...")
-        nonlocal mrp
+        nonlocal mrp, note
         mrp = MRP(osc)
+        mrp.all_notes_off()
+        mrp.note_on(note)
     
-    @repeat(0.125)
+    @repeat(0.1)
     def _():
-        nonlocal note_on, note
-        current = (note % 88) + 21
-        if note_on == False:
-            mrp.note_on(current, 127)
-            mrp.quality_update(current, 'brightness', 1)
-            mrp.quality_update(current, 'intensity', 1)
-            note_on = True
-        else:
-            mrp.note_off(current)
-            note_on = False
-            note+=1
-        print(current, mrp.voices)
+        nonlocal note, count, counter
+        mrp.set_note_quality(note, 'intensity', 1)
+        mrp.set_note_quality(note, 'harmonics_raw', [counter/count, 0, 0, 0, 0, 0, 0, 0])
+        counter+=1
+        if counter == count:
+            mrp.note_off(note)
+            note+=random.randint(-24, 24)
+            mrp.note_on(note)
+            counter=0
+        # print(counter, count, counter/count)
 
     @cleanup
     def _():

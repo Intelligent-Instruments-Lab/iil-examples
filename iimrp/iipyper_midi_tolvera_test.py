@@ -46,7 +46,7 @@ def main(midi_in='To iipyper 1', osc_host='127.0.0.1', osc_port=9999, mrp_send_p
     @midi.handle(type='control_change', control=0)
     def _(msg):
         print(f"cc: {msg}")#, mapping: {cc_mapping[msg.control]}")
-        # mrp.quality_update(notes_on, cc_mapping[msg.control], msg.value/127)
+        # mrp.set_note_quality(notes_on, cc_mapping[msg.control], msg.value/127)
 
     tol.init()
     particles = tol.Particles(1920, 1080, 64, 5, 120, False)

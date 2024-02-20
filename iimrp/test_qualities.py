@@ -5,9 +5,10 @@ Authors:
   Intelligent Instruments Lab 2022
 """
 
+import numpy as np
+import random
 from iipyper import OSC, run, repeat, cleanup
 from iimrp import MRP
-import random
 
 def main(host="127.0.0.1", receive_port=8888, send_port=7770):
 
@@ -30,27 +31,33 @@ def main(host="127.0.0.1", receive_port=8888, send_port=7770):
         mrp = MRP(osc)
         mrp.all_notes_off()
         mrp.note_on(note)
+
+    reset(None)
     
+    def create_array(N, l):
+        return np.linspace(-N/2, N/2, l)
+
     @repeat(0.1)
     def _():
         nonlocal note, count, counter
-        mrp.quality_update(note, 'intensity', 1.0)#counter/count)
-        mrp.quality_update(note, 'brightness', counter/count)
-        # mrp.quality_update(note, 'harmonic', counter/count)
-        mrp.quality_update(note, 'pitch', (counter/count)*2-1)
+        pitch_arr = create_array(24, count)
+        mrp.set_note_quality(note, 'intensity', 1.0)#counter/count)
+        # mrp.set_note_quality(note, 'brightness', counter/count)
+        # mrp.set_note_quality(note, 'harmonic', counter/count)
+        mrp.set_note_quality(note, 'pitch', pitch_arr[counter])
         counter+=1
         if counter == count:
+            print(f"turning note {note} off.")
             mrp.note_off(note)
-            note+=random.randint(-24, 24)
+            note = random.randint(21, 108)
             mrp.note_on(note)
             counter=0
-        print(counter, count, counter/count)
+        print(f"{counter}/{count}, note: {note}, pitch: {pitch_arr[counter]}")
+        print(f"note {note} qualities: {mrp.get_note_qualities(note)}")
 
     @cleanup
     def _():
         mrp.cleanup()
-
-    reset(None)
 
 if __name__=='__main__':
     run(main)

@@ -164,11 +164,11 @@ def main(host="127.0.0.1", receive_port=7563, send_port=7770,
         mrp.all_notes_off()
         for n in mrp_data[-1]:
             mrp.note_on(n)
-            mrp.quality_update(n, 'intensity', 1.0)
+            mrp.set_note_quality(n, 'intensity', 1.0)
 
     set_notes()
     for n, q in mrp_data[-1].items():
-        mrp.qualities_update(n, q)
+        mrp.set_note_qualities(n, q)
 
 
     frame_count = 0
@@ -245,7 +245,7 @@ def main(host="127.0.0.1", receive_port=7563, send_port=7770,
             if n not in notes_on:
                 # print(f'note on {n}')
                 mrp.note_on(n)
-            mrp.qualities_update(n, q)
+            mrp.set_note_qualities(n, q)
 
         t_mrp = process_time_ns()
 
