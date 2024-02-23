@@ -1,3 +1,8 @@
+"""Interactive machine learning example
+
+Using the flock model, we map its particle states to its species rules,
+creating a feedback loop between them."""
+
 from tolvera import Tolvera, run
 
 def main(**kwargs):
