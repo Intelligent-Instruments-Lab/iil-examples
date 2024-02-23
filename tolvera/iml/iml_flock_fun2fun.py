@@ -1,7 +1,13 @@
 """Interactive machine learning example
 
 Using the flock model, we map its particle states to its species rules,
-creating a feedback loop between them."""
+creating a feedback loop between them.
+
+The IML 'type' is 'fun2fun' because we are mapping a function to another function.
+
+Example
+  $ python iml_flock_particles_to_species.py --iml True
+"""
 
 from tolvera import Tolvera, run
 
