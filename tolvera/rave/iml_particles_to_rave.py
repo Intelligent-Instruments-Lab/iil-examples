@@ -13,6 +13,7 @@ import sounddevice as sd
 
 from iipyper import Audio
 from tolvera import Tolvera, run
+from tolvera.utils import map_range
 
 def main(**kwargs):
     print(f"Availabe audio devices:\n{sd.query_devices()}")
@@ -47,13 +48,21 @@ def main(**kwargs):
         'type': 'fun2vec',
         'size': ((tv.pn,2), rave.encode_params[2]),
         'io': (tv.p.get_pos_all_2d, None),
-        'randomise': True
+        'randomise': True,
+        # 'rand_method': 'uniform',
+        # 'rand_kw': {'low': -3, 'high': 3},
+        # 'config': {'interpolate': 'Ripple'},
+        # 'default_kwargs': {'k': 10, 'ripple_depth': 5, 'ripple': 5}
     }
+
+    # print(tv.iml.particles2rave.pairs)
+    # exit()
 
     def update():
         nonlocal z
         outvec = tv.iml.o['particles2rave']
         if outvec is not None:
+            print('outvec',outvec)
             z[:] = torch.from_numpy(outvec)
 
     audio.stream.start()
