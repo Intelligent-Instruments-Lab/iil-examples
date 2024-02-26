@@ -9,7 +9,11 @@ from iipyper import OSC, run, repeat, cleanup
 from iimrp import MRP
 import random
 
-def main(host="127.0.0.1", receive_port=8888, send_port=7770):
+def main(**kwargs):
+
+    host = kwargs.get("host", "127.0.0.1")
+    receive_port = kwargs.get("receive_port", 8888)
+    send_port = kwargs.get("send_port", 7770)
 
     osc = OSC(host, receive_port, send_port)
     osc.create_client("mrp", port=send_port)
@@ -27,15 +31,17 @@ def main(host="127.0.0.1", receive_port=8888, send_port=7770):
         """
         print("Resetting MRP...")
         nonlocal mrp, note
-        mrp = MRP(osc)
+        mrp = MRP(osc, record=kwargs.get('record', False))
         mrp.all_notes_off()
         mrp.note_on(note)
+
+    reset(None)
     
     @repeat(0.1)
     def _():
         nonlocal note, count, counter
         mrp.set_note_quality(note, 'intensity', 1)
-        mrp.set_note_quality(note, 'harmonics_raw', [counter/count, 0, 0, 0, 0, 0, 0, 0])
+        mrp.set_note_quality(note, 'harmonics_raw', [counter/count, 0., 0., 0., 0., 0., 0., 0.])
         counter+=1
         if counter == count:
             mrp.note_off(note)
@@ -47,8 +53,6 @@ def main(host="127.0.0.1", receive_port=8888, send_port=7770):
     @cleanup
     def _():
         mrp.cleanup()
-
-    reset(None)
 
 if __name__=='__main__':
     run(main)
