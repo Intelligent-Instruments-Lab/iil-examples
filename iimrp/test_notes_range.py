@@ -31,11 +31,11 @@ def main(**kwargs):
         """
         print("Resetting MRP...")
         nonlocal mrp
-        mrp = MRP(osc)
+        mrp = MRP(osc, record=kwargs.get('record', False))
 
     reset(None)
     
-    @repeat(0.125)
+    @repeat(kwargs.get('interval', 0.1))
     def _():
         nonlocal note_on, note, start, end
         if note_on == False:

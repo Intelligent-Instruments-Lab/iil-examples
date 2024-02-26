@@ -8,7 +8,11 @@ Authors:
 from iipyper import OSC, run, repeat, cleanup
 from iimrp import MRP
 
-def main(host="127.0.0.1", receive_port=8888, send_port=7770):
+def main(**kwargs):
+
+    host = kwargs.get("host", "127.0.0.1")
+    receive_port = kwargs.get("receive_port", 8888)
+    send_port = kwargs.get("send_port", 7770)
 
     osc = OSC(host, receive_port, send_port)
     osc.create_client("mrp", port=send_port)
@@ -24,11 +28,11 @@ def main(host="127.0.0.1", receive_port=8888, send_port=7770):
         """
         print("Resetting MRP...")
         nonlocal mrp
-        mrp = MRP(osc)
+        mrp = MRP(osc, record=kwargs.get('record', False))
 
     reset(None)
     
-    @repeat(0.125)
+    @repeat(kwargs.get('interval', 0.1))
     def _():
         nonlocal note_on, note
         current = (note % 88) + 21

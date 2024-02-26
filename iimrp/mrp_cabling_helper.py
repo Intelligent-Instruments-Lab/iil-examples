@@ -6,12 +6,13 @@ Start by wiring up the first and last magnets on each amplifier,
 and then run this script to check that the magnets are working correctly.
 
 Command-line arguments:
+    --help: print this message and exit.
+    --amps: Amplifier index(es), as int or list. Default is 0.
+    --fstlst: Test the first and last magnets of each amplifier only. Default is False.
+    --interval: The interval in seconds between each note change. Default is 1.
     --host: The host to send OSC messages to. Default is '127.0.0.1'.
     --receive_port: The port to receive OSC messages on. Default is 8888.
     --send_port: The port to send OSC messages to. Default is 7770.
-    --interval: The interval in seconds between each note change. Default is 1.
-    --print: Print the note names and midi note numbers and then exit.
-    --help: print this message and exit.
 """
 
 from iipyper import OSC, run, repeat, cleanup
@@ -43,37 +44,30 @@ def main(**kwargs):
 
     reset(None)
 
-    # Generate a list of notes for the amplifiers
-    npa = 18 # notes per amplifier
-    amp_rows = 6
-    A0 = 21
-    gen_amp_notes = lambda n: [
-        A0 + npa * (i//2) if i % 2 == 0 else
-        A0 + npa * (i//2) + npa-1
-        for i in range(n)]
-    amp_notes = gen_amp_notes(amp_rows*2)
-    print(f"Amplifier notes: {dict(zip(mrp.midi_notes_to_note_names(amp_notes), amp_notes))}")
-    amp_notes_index = 0
-    note = 0
+    amps = kwargs.get('amps', 0)
+    print(f"Testing amplifier(s): {amps}")
+    amps = mrp.get_amps_fstlst(amps) if kwargs.get('fstlst', False) else mrp.get_amps(amps)
+    print(f"Amplifier notes: {amps}")
+    amps_index = 0
 
-    kwargs.get('print', False)
-    if print:
-        exit()
-    
     @repeat(kwargs.get('interval', 1))
     def _():
         """
         Loop through the first and last notes
-        of each amplifier, turning them on and off.
+        of amplifier(s), turning them on and off.
         """
-        nonlocal note, amp_notes, amp_notes_index
-        mrp.note_off(note)
-        note = amp_notes[amp_notes_index]
-        mrp.note_on(note)
-        mrp.set_note_quality(note, 'intensity', 1)
-        amp_notes_index += 1
-        if amp_notes_index >= len(amp_notes):
-            amp_notes_index = 0
+        nonlocal amps, amps_index
+        
+        old_note = amps[amps_index]
+        mrp.note_off(old_note)
+
+        new_note = amps[amps_index]
+        mrp.note_on(new_note)
+        mrp.set_note_quality(new_note, 'intensity', 1)
+        
+        amps_index += 1
+        if amps_index >= len(amps):
+            amps_index = 0
 
     @cleanup
     def _():
