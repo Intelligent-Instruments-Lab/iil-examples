@@ -1,44 +1,23 @@
-"""
-Authors:
-  Victor Shepardson
-  Jack Armitage
-  Intelligent Instruments Lab 2022
-"""
-
 from iipyper import OSC, run, repeat, cleanup
 from iimrp import MRP
 
 def main(**kwargs):
+    osc = OSC(kwargs.get('host', '127.0.0.1'), 
+              kwargs.get('receive_port', 8888))
+    osc.create_client("mrp", port=kwargs.get('send_port', 7770))
+    mrp = MRP(osc, record=kwargs.get('record', False))
 
-    host = kwargs.get("host", "127.0.0.1")
-    receive_port = kwargs.get("receive_port", 8888)
-    send_port = kwargs.get("send_port", 7770)
-
-    osc = OSC(host, receive_port, send_port)
-    osc.create_client("mrp", port=send_port)
-
-    mrp = None
     note_on = False
     note = 0
 
-    @osc.args(return_port=7777)
-    def reset(address, kind=None):
-        """
-        reset the mrp
-        """
-        print("Resetting MRP...")
-        nonlocal mrp
-        mrp = MRP(osc, record=kwargs.get('record', False))
-
-    reset(None)
-    
+    intensity = kwargs.get('intensity', 1)
     @repeat(kwargs.get('interval', 0.1))
     def _():
-        nonlocal note_on, note
+        nonlocal note_on, note, intensity
         current = (note % 88) + 21
         if note_on == False:
             mrp.note_on(current, 127)
-            mrp.set_note_quality(current, 'intensity', 1)
+            mrp.set_note_quality(current, 'intensity', intensity)
             note_on = True
         else:
             mrp.note_off(current)

@@ -1,23 +1,13 @@
-"""
-Authors:
-  Victor Shepardson
-  Jack Armitage
-  Intelligent Instruments Lab 2022
-"""
-
 import numpy as np
 import random
 from iipyper import OSC, run, repeat, cleanup
 from iimrp import MRP
 
 def main(**kwargs):
-
-    host = kwargs.get("host", "127.0.0.1")
-    receive_port = kwargs.get("receive_port", 8888)
-    send_port = kwargs.get("send_port", 7770)
-
-    osc = OSC(host, receive_port, verbose=True)
-    osc.create_client("mrp", port=send_port)
+    osc = OSC(kwargs.get('host', '127.0.0.1'), 
+              kwargs.get('receive_port', 8888))
+    osc.create_client("mrp", port=kwargs.get('send_port', 7770))
+    mrp = MRP(osc, record=kwargs.get('record', False))
 
     mrp = None
     note_on = False
@@ -25,18 +15,7 @@ def main(**kwargs):
     count = 100 # frames
     counter = 0
 
-    @osc.args(return_port=7777)
-    def reset(address, kind=None):
-        """
-        reset the mrp
-        """
-        print("Resetting MRP...")
-        nonlocal mrp, note
-        mrp = MRP(osc, record=kwargs.get('record', False))
-        mrp.all_notes_off()
-        mrp.note_on(note)
-
-    reset(None)
+    mrp.note_on(note)
     
     def create_array(N, l):
         return np.linspace(-N/2, N/2, l)
