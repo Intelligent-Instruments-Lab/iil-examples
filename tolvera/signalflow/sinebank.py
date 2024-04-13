@@ -21,10 +21,12 @@ class Sine(Patch):
 def main(**kwargs):
     tv = Tolvera(**kwargs)
 
-    graph = AudioGraph()
+    config = AudioGraphConfig()
+    config.output_buffer_size = kwargs.get('output_buffer_size', 8192)
+    graph = AudioGraph(config)
     
     num_sines = tv.pn
-    freq, pan, gain = (100, 1000), (-1, 1), (0, 1/num_sines)
+    freq, pan, gain = (100, 10000), (-1, 1), (0, 1/num_sines)
     freqs = [np.random.uniform(*freq) for _ in range(num_sines)]
     pans = [np.random.uniform(*pan) for _ in range(num_sines)]
     gains = [np.random.uniform(*gain) for _ in range(num_sines)]
