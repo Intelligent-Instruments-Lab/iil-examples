@@ -26,7 +26,7 @@ def main(**kwargs):
     patch_type = kwargs.get('patch_type', "Pd")
     patch_name = kwargs.get('patch_name', "iipyper-oscmap")
     pd_bela = kwargs.get('pd_bela', False) # True will also create a `_main.pd` patch for Bela
-    export = kwargs.get('export', True)
+    export = kwargs.get('export', None)
     
     '''''''''''''''''''''''''''''''''''''''''''''
     OSC
