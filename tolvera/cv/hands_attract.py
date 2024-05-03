@@ -19,7 +19,7 @@ def main(**kwargs):
     @tv.render
     def _():
         tv.px.set(tv.cv())
-        tv.v.plife(tv.p)
+        tv.v.flock(tv.p)
         tv.px.diffuse(0.99)
         tv.hands(tv.cv.cc_frame)
         tv.hands.draw_hand(0)
