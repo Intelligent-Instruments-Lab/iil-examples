@@ -3,7 +3,7 @@ from tolvera import Tolvera, run
 def main(**kwargs):
     tv = Tolvera(**kwargs)
 
-    tv.iml.flock_p2flock_s = {
+    tv.iml.osc2flock_s = {
         'type': 'osc2fun', 
         'size': (4, tv.s.flock_s.size), 
         'io': ('tolvera/flock/iml', tv.s.flock_s.from_vec),
