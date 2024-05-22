@@ -140,7 +140,7 @@ def main(**kwargs):
     tv = Tolvera(**kwargs)
     graph = AudioGraph()
     
-    audio_file = kwargs.get("audio_file", "qmul-workshop/audio/sunkilmoon-truckers-atlas-loop.wav")
+    audio_file = kwargs.get("audio_file", "sunkilmoon-truckers-atlas-loop.wav")
     analyse = kwargs.get("analyse", False)
     load = kwargs.get("load", False)
     
@@ -187,19 +187,19 @@ def main(**kwargs):
     play()
     
     @ti.func
-    def grain_pos_f32(i):
+    def grain_pos_f32(i) -> ti.math.vec2:
         """Get a grain's position in pixels as a float."""
         x, y = tv.s.grains[i].x, tv.s.grains[i].y
         x, y = ti_map_range(x, -3., 3., 0., tv.x), ti_map_range(y, -3., 3., 0., tv.y)
         x, y = ti.cast(x, ti.i32), ti.cast(y, ti.i32)
-        return x, y
+        return ti.Vector([x, y])
     
     @ti.func
-    def grain_pos_i32(i):
+    def grain_pos_i32(i) -> ti.math.vec2:
         """Get a grain's position in pixels as an integer."""
         x, y = grain_pos_f32(i)
         x, y = ti.cast(x, ti.i32), ti.cast(y, ti.i32)
-        return x, y
+        return ti.Vector([x, y])
 
     @ti.kernel
     def draw_grains():
@@ -215,11 +215,11 @@ def main(**kwargs):
     @ti.kernel
     def attract_grains(radius: ti.f32):
         for gi, pi in ti.ndrange(tv.s.grains.shape[0], tv.p.field.shape[0]):
-            g = ti.Vector(grain_pos_f32(gi))
+            g = grain_pos_f32(gi)
             p = tv.p.field[pi]
             dist = p.pos - g
             if dist.norm() < radius:
-                tv.v._attract(tv.p, g, 1, tv.x)
+                tv.v.attract_particle(p, g, 100, tv.x)
 
     @tv.cleanup
     def _():
@@ -229,10 +229,10 @@ def main(**kwargs):
     def _():
         updater()
         tv.px.diffuse(0.99)
-        tv.v.flock(tv.p)
+        tv.v.flock(tv.p,0.01)
+        tv.px.particles(tv.p, tv.s.species())
         draw_grains()
         attract_grains(10)
-        tv.px.particles(tv.p, tv.s.species())
         return tv.px
 
 if __name__ == '__main__':
