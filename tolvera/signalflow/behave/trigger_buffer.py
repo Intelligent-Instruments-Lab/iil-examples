@@ -28,10 +28,15 @@ def main(**kwargs):
             p = tv.p.field[i]
             px = p.pos.x
             ppx = p.ppos.x
+            t = 0
             if px > tv.x/2 and ppx < tv.x/2 and ppx > 0:
-                tv.s.triggers[i].t = 1
+                t = 1
             if px < tv.x/2 and ppx > tv.x/2 and ppx < tv.x:
-                tv.s.triggers[i].t = 1
+                t = 1
+            tv.s.triggers[i].t = t
+            if t == 1:
+                c = tv.s.species[p.species].rgba
+                tv.px.circle(px, p.pos.y, 20, c)
             tv.p.field[i].ppos = px
 
     def update():
@@ -39,11 +44,13 @@ def main(**kwargs):
             if tv.s.triggers.field[i].t == 1:
                 player.trigger()
                 tv.s.triggers.field[i].t = 0
+                p1 = tv.p.field[i]
 
     @tv.render
     def _():
-        tv.px.clear()
-        tv.v.move(tv.p, 2)
+        tv.px.diffuse(0.99)
+        tv.v.flock(tv.p, 1)
+        tv.v.centripetal(tv.p, ti.Vector([tv.x/2,tv.y/2]), 0, 5)
         tv.px.particles(tv.p, tv.s.species())
         check_trigger()
         update()
