@@ -9,8 +9,8 @@ Authors:
   Intelligent Instruments Lab 2023
 """
 
-import iml as iml_module
-from iml import IML
+import anguilla as iml_module
+from anguilla import IML
 from iipyper import TUI, Audio, OSC, run, _lock
 import numpy as np
 from textual import events
