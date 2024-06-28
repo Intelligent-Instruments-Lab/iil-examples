@@ -35,7 +35,7 @@ def main(**kwargs):
     def _():
         update()
         tv.px.clear()
-        tv.v.move(tv.p)
+        tv.v.move(tv.p, 1)
         ti_buf.from_numpy(output.output_buffer)
         draw(ti_buf, points)
         tv.px.particles(tv.p, tv.s.species())
