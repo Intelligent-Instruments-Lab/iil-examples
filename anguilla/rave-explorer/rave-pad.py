@@ -98,8 +98,8 @@ def main(
 
         BINDINGS = [
             ("r", "randomize", "randomize around current mapping"),
-            ("z", "zero", "reset to zero vector"),
-            ("s", "store", "store a source / target"),
+            # ("z", "zero", "reset to zero vector"),
+            # ("s", "store", "store a source / target"),
         ]
 
         def __init__(self):
