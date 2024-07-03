@@ -6,10 +6,11 @@ Authors:
 
 import torch
 import anguilla as ag
-from iipyper import TUI, OSC, run, AudioProcess
+from iipyper import TUI, OSC, run, AudioProcess, profile
 import numpy as np
 
 from rich.panel import Panel
+from rich.text import Text
 from textual.widgets import Header, Footer, Static, Button, RichLog
 from textual.containers import Container
 from textual.reactive import reactive
@@ -51,7 +52,7 @@ def main(
         ):
     # osc = OSC(osc_host, osc_port)
 
-    # XY pad
+    # two dimensions: XY pad
     d_src = 2
 
     # smooth audio using a separate process
@@ -66,35 +67,73 @@ def main(
     d_tgt = rave_process.recv()
 
     class CtrlPad(Container):
+
         def on_mount(self) -> None:
             self.capture_mouse()
+            self._colors = None
 
         def on_mouse_move(self, event):
             w, h = self.content_size
-            ctrl[0] = event.x / w
-            ctrl[1] = event.y / h
-            # z[:] = torch.from_numpy(iml.map(ctrl, k=5))
+            ctrl[0] = (event.x - 0.5) / w
+            ctrl[1] = (event.y - 0.5) / h
             update_z()
+            # print(self.content_size)
+            # print(self.offset)
+            # print(ctrl)
             # print(event)
             self.refresh()
 
+        def on_resize(self):
+            self.set_colors()
+
+        def set_colors(self):
+            w, h = self.content_size
+            if w*h==0: return
+            # print(w,h)
+            x = torch.arange(w)/w
+            y = torch.arange(h)/h
+            xy = torch.stack((
+                x[:,None].expand(w,h),
+                y[None].expand(w,h)),
+                -1).reshape(-1, 2)
+            
+            zs = iml.map_batch(xy, k=k)
+            cs = zs[:,[1,0,2]].reshape(w,h,3)
+            cs = np.clip(((cs+3)/6*256).astype(int), 0, 255)
+            cs = cs.transpose(1,0,2)
+            self._colors = cs
+
         def render(self):
-            _,_,ids,_ = iml.search(ctrl, k=k)
+            with profile('render', print=tui.print, enable=False):
+                w, h = self.content_size
 
-            w,h = self.content_size
-            chars = [[' ' for _ in range(w)] for _ in range(h)]
+                _,_,ids,_ = iml.search(
+                    ctrl, k=k, return_inputs=False, return_outputs=False)
+                ids = set(ids)
+                chars = [[' ' for _ in range(w)] for _ in range(h)]
 
-            for i, (src, _) in iml.pairs.items():
-                src = np.array(src) * np.array(self.content_size)
-                x, y = src.astype(int)
+                for i, (src, _) in iml.pairs.items():
+                    x, y = int(src[0]*w), int(src[1]*h)
+                    if y>0 and y<h and x>0 and x<w:
+                        chars[y][x] = '○' if i in ids else '·'
+   
+                x, y = (ctrl * np.array(self.content_size)).int()
                 if y>0 and y<h and x>0 and x<w:
-                    chars[y][x] = '0' if i in ids else '*'
+                    chars[y][x] = 'X'
 
-            x, y = (ctrl * np.array(self.content_size)).int()
-            if y>0 and y<h and x>0 and x<w:
-                chars[y][x] = 'X'
+                # return '\n'.join(''.join(row) for row in chars)
+                if self._colors is None:
+                    self.set_colors()
 
-            return '\n'.join(''.join(row) for row in chars)
+                t = Text()
+                for trow, crow in zip(chars, self._colors):
+                    for ch,(r,g,b) in zip(trow, crow):
+                        # use of rgb() seems to be limiting performance here...
+                        t.append(ch, style=f'black on rgb({r},{g},{b})')
+                        # t.append(ch, style=f'black on white')
+                    t.append('\n')
+
+                return t
 
     class IMLState(Static):
         value = reactive((None,None))
@@ -126,19 +165,15 @@ def main(
 
     tui = IMLTUI()
 
-    # print = ag.print = tui.print
+    print = ag.print = tui.print
 
     ctrl = torch.zeros(d_src)
     z = torch.zeros(d_tgt)  
 
     iml = ag.IML()
 
-    # TODO: button to fix current neighbors
-    # or record a gesture and fix those neighbors
-    # draw locations of current sources
-
     def update_z():
-        z[:] = torch.from_numpy(iml.map(ctrl, k=5))
+        z[:] = torch.from_numpy(iml.map(ctrl, k=k))
         rave_process(z=z)
         tui(state=(
             ' '.join(f'{x.item():+0.2f}' for x in ctrl),
@@ -150,6 +185,7 @@ def main(
         if len(ids) < len(iml.pairs):
             iml.remove_batch(ids)
             update_z()
+            tui.ctrl_pad.set_colors()
             tui.ctrl_pad.refresh()
 
     @tui.set_action
@@ -157,7 +193,6 @@ def main(
         # keep the current nearest neighbors and rerandomize the rest
         # print('randomize:')
         if len(iml.pairs):
-            # iml.reset(keep_near=ctrl, k=k)
             if mode=='out':
                 srcs, tgts, _, scores = iml.search(ctrl, k=k)
                 max_score = max(scores)
@@ -174,29 +209,29 @@ def main(
         else:
             max_score = 0
 
-        # print(f'{tui.ctrl_pad.content_size=}')
-        # print(f'{tui.ctrl_pad.content_offset=}')
         total_pts = min(len(iml.pairs)+k, n_pts) if mode=='in' else n_pts
         while(len(iml.pairs) < total_pts):
             src = torch.rand(d_src)
             if mode=='in':
+                # improve performance of rejection sampling
                 src -= 0.5
-                src *= max_score **0.5 *2
+                src *= max_score **0.5 *2 # assumes sqL2
                 src += ctrl
             dist = iml.score(ctrl.numpy(), src.numpy())
             if mode=='out':
                 if dist < max_score:
                     continue
-                tgt = z + torch.randn(d_tgt)*2
+                tgt = z + torch.randn(d_tgt)*1.5
             elif mode=='in':
                 if dist > max_score:
                     continue
-                tgt = torch.randn(d_tgt)*2
+                tgt = torch.randn(d_tgt)
             else:
                 tgt = torch.randn(d_tgt)
             iml.add(src, tgt)
 
         update_z()
+        tui.ctrl_pad.set_colors()
         tui.ctrl_pad.refresh()
 
     @tui.set_action   
@@ -207,16 +242,11 @@ def main(
     def outside():
         randomize(mode='out')
 
-
-    # @tui.set_action
-    # def zero():
-    #     z.zero_()
-    #     randomize()
-
     ###
     randomize()
 
     # rave_process(z=z)
+    ag.interpolate.print = tui.print
 
     tui.run()
 
