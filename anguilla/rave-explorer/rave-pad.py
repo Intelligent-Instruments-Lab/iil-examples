@@ -147,9 +147,10 @@ def main(
     @tui.set_action
     def delete():
         _, _, ids, scores = iml.search(ctrl, k=k)
-        iml.remove_batch(ids)
-        update_z()
-        tui.ctrl_pad.refresh()
+        if len(ids) < len(iml.pairs):
+            iml.remove_batch(ids)
+            update_z()
+            tui.ctrl_pad.refresh()
 
     @tui.set_action
     def randomize(mode=None):
