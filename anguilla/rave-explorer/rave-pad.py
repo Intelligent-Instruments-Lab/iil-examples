@@ -6,23 +6,38 @@ Authors:
 
 import torch
 import anguilla as ag
-from iipyper import TUI, audio, start_audio, OSC, run, AudioProcess
+from iipyper import TUI, OSC, run, AudioProcess
 import numpy as np
 
 from rich.panel import Panel
-from textual.widgets import Header, Footer, Static, Button, RichLog, Sparkline
+from textual.widgets import Header, Footer, Static, Button, RichLog
 from textual.containers import Container
 from textual.reactive import reactive
+
+def get_sr(nn):
+    """get sample rate from nn~ model"""
+    try: return nn.sr # newer models
+    except Exception:
+        try: return nn.sampling_rate # older victor-shepardson fork models
+        except Exception: return None # very old models
+
 
 class RAVEProcess(AudioProcess):
     def init(self, rave_path):
         with torch.inference_mode():
             self.rave = torch.jit.load(rave_path)
+        # here it's possible to update parameters before the audio stream starts
+        self.samplerate = get_sr(self.rave)
+        latent_size = self.rave.decode_params[0]
+        # can set initial values of arguments to `step` here
+        self.step_params['z'] = torch.zeros(latent_size)
+        # return value of init gets sent to main process
+        return latent_size
 
-    def step(self, z=None):
+    def step(self, z):
         with torch.inference_mode():
-            if z is None:
-                return torch.zeros(2048, 1) # TODO
+            # if z is None:
+                # return torch.zeros(self.rave.decode_params[1], 1)
             return self.rave.decode(z[None,:,None])[:,0].T
 
 def main(
@@ -35,22 +50,20 @@ def main(
         # osc_host="127.0.0.1", osc_port=9999,
         ):
     # osc = OSC(osc_host, osc_port)
-    
-    rave = torch.jit.load(rave_path)
-    d_src = 2
-    d_tgt = rave.encode_params[2]
-    try:
-        sr = rave.sr
-    except Exception:
-        sr = rave.sampling_rate
-    del rave
 
+    # XY pad
+    d_src = 2
+
+    # smooth audio using a separate process
     rave_process = RAVEProcess(
         rave_path=rave_path, 
-        device=device, dtype=np.float32,
-        samplerate=sr, blocksize=audio_block,
-        buffer_frames=buffer_frames
+        device=device, dtype=np.float32, blocksize=audio_block,
+        buffer_frames=buffer_frames,
+        use_input=False
         )
+    
+    # get return value of rave_process.init
+    d_tgt = rave_process.recv()
 
     class CtrlPad(Container):
         def on_mount(self) -> None:
@@ -61,8 +74,7 @@ def main(
             ctrl[0] = event.x / w
             ctrl[1] = event.y / h
             # z[:] = torch.from_numpy(iml.map(ctrl, k=5))
-            z[:] = torch.from_numpy(iml.map(ctrl, k=5))
-            rave_process(z=z)
+            update_z()
             # print(event)
             self.refresh()
             tui(state=(
@@ -97,9 +109,10 @@ def main(
         CSS_PATH = 'tui.css'
 
         BINDINGS = [
-            ("r", "randomize", "randomize around current mapping"),
-            # ("z", "zero", "reset to zero vector"),
-            # ("s", "store", "store a source / target"),
+            ("r", "randomize", "randomize all"),
+            ("i", "inside", "randomize inside"),
+            ("o", "outside", "randomize outside"),
+            ("d", "delete", "delete near"),
         ]
 
         def __init__(self):
@@ -116,7 +129,7 @@ def main(
 
     tui = IMLTUI()
 
-    print = ag.print = tui.print
+    # print = ag.print = tui.print
 
     ctrl = torch.zeros(d_src)
     z = torch.zeros(d_tgt)  
@@ -127,32 +140,72 @@ def main(
     # or record a gesture and fix those neighbors
     # draw locations of current sources
 
+    def update_z():
+        z[:] = torch.from_numpy(iml.map(ctrl, k=5))
+        rave_process(z=z)
+
     @tui.set_action
-    def randomize():
+    def delete():
+        _, _, ids, scores = iml.search(ctrl, k=k)
+        iml.remove_batch(ids)
+        update_z()
+        tui.ctrl_pad.refresh()
+
+    @tui.set_action
+    def randomize(mode=None):
         # keep the current nearest neighbors and rerandomize the rest
         # print('randomize:')
         if len(iml.pairs):
             # iml.reset(keep_near=ctrl, k=k)
-            srcs, tgts, _, scores = iml.search(ctrl, k=k)
-            max_score = max(scores)
-            iml.reset()
-            for s,t in zip(srcs,tgts):
-                # print(s,t)
-                iml.add(s,t)
+            if mode=='out':
+                srcs, tgts, _, scores = iml.search(ctrl, k=k)
+                max_score = max(scores)
+                iml.reset()
+                for s,t in zip(srcs,tgts):
+                    # print(s,t)
+                    iml.add(s,t)
+            elif mode=='in':
+                _, _, ids, scores = iml.search(ctrl, k=k)
+                max_score = max(scores)
+                iml.remove_batch(ids)
+            else:
+                iml.reset()
         else:
             max_score = 0
 
         # print(f'{tui.ctrl_pad.content_size=}')
         # print(f'{tui.ctrl_pad.content_offset=}')
-        while(len(iml.pairs) < n_pts):
-            src = torch.rand(d_src)#/(ctrl.abs()/2+1)
-            dist = iml.distance(ctrl.numpy(), src.numpy())
-            if dist < max_score:
-                continue
-            tgt = z + torch.randn(d_tgt)*2#/(z.abs()/2+1)
+        total_pts = min(len(iml.pairs)+k, n_pts) if mode=='in' else n_pts
+        while(len(iml.pairs) < total_pts):
+            src = torch.rand(d_src)
+            if mode=='in':
+                src -= 0.5
+                src *= max_score **0.5 *2
+                src += ctrl
+            dist = iml.score(ctrl.numpy(), src.numpy())
+            if mode=='out':
+                if dist < max_score:
+                    continue
+                tgt = z + torch.randn(d_tgt)*2
+            elif mode=='in':
+                if dist > max_score:
+                    continue
+                tgt = torch.randn(d_tgt)*2
+            else:
+                tgt = torch.randn(d_tgt)
             iml.add(src, tgt)
 
+        update_z()
         tui.ctrl_pad.refresh()
+
+    @tui.set_action   
+    def inside():
+        randomize(mode='in')
+
+    @tui.set_action   
+    def outside():
+        randomize(mode='out')
+
 
     # @tui.set_action
     # def zero():
