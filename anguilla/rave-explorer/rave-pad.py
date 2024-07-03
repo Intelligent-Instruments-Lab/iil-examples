@@ -77,9 +77,6 @@ def main(
             update_z()
             # print(event)
             self.refresh()
-            tui(state=(
-                ' '.join(f'{x.item():+0.2f}' for x in ctrl),
-                ' '.join(f'{x.item():+0.2f}' for x in z)))
 
         def render(self):
             _,_,ids,_ = iml.search(ctrl, k=k)
@@ -143,6 +140,9 @@ def main(
     def update_z():
         z[:] = torch.from_numpy(iml.map(ctrl, k=5))
         rave_process(z=z)
+        tui(state=(
+            ' '.join(f'{x.item():+0.2f}' for x in ctrl),
+            ' '.join(f'{x.item():+0.2f}' for x in z)))
 
     @tui.set_action
     def delete():
