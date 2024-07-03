@@ -43,8 +43,8 @@ class RAVEProcess(AudioProcess):
 def main(
         device=None,
         rave_path=None,
-        n_pts=32,
-        k=5,
+        n_pts=128,
+        k=8,
         buffer_frames=1,
         audio_block=256,
         # osc_host="127.0.0.1", osc_port=9999,
