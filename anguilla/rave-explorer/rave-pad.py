@@ -6,11 +6,12 @@ Authors:
 
 import torch
 import anguilla as ag
-from iipyper import TUI, OSC, run, AudioProcess, profile
+import iipyper as ii
 import numpy as np
 
 from rich.panel import Panel
 from rich.text import Text
+from rich.style import Style
 from textual.widgets import Header, Footer, Static, Button, RichLog
 from textual.containers import Container
 from textual.reactive import reactive
@@ -23,7 +24,7 @@ def get_sr(nn):
         except Exception: return None # very old models
 
 
-class RAVEProcess(AudioProcess):
+class RAVEProcess(ii.AudioProcess):
     def init(self, rave_path):
         with torch.inference_mode():
             self.rave = torch.jit.load(rave_path)
@@ -42,15 +43,26 @@ class RAVEProcess(AudioProcess):
             return self.rave.decode(z[None,:,None])[:,0].T
 
 def main(
+        rave_path,
         device=None,
-        rave_path=None,
         n_pts=128,
         k=8,
         buffer_frames=1,
         audio_block=256,
-        # osc_host="127.0.0.1", osc_port=9999,
+        render_map=True,
+        profile=False
         ):
-    # osc = OSC(osc_host, osc_port)
+    """
+    Args:
+        rave_path: path to RAVE model .ts file
+        device: audio device index or name
+        n_pts: number of points in anguilla map
+        k: number of nearest neighbors to use
+        buffer_frames: trade latency for stability in audio backend
+        audio_block: audio driver block size
+        render_map: initial value of option render anguilla map
+        profile: print performance info
+    """
 
     # two dimensions: XY pad
     d_src = 2
@@ -71,6 +83,7 @@ def main(
         def on_mount(self) -> None:
             self.capture_mouse()
             self._colors = None
+            self.render_map = render_map
 
         def on_mouse_move(self, event):
             w, h = self.content_size
@@ -89,6 +102,7 @@ def main(
         def set_colors(self):
             w, h = self.content_size
             if w*h==0: return
+            if not self.render_map: return
             # print(w,h)
             x = torch.arange(w)/w
             y = torch.arange(h)/h
@@ -101,10 +115,16 @@ def main(
             cs = zs[:,[1,0,2]].reshape(w,h,3)
             cs = np.clip(((cs+3)/6*256).astype(int), 0, 255)
             cs = cs.transpose(1,0,2)
-            self._colors = cs
+            # self._colors = cs
+
+            # use of rgb() seems to be limiting performance here...
+            self._colors = [[
+                Style(color='black', bgcolor=f'rgb({r},{g},{b})') 
+                # Style(color='black', bgcolor=f'white') 
+                for r,g,b in row] for row in cs]
 
         def render(self):
-            with profile('render', print=tui.print, enable=False):
+            with ii.profile('render', print=tui.print, enable=profile):
                 w, h = self.content_size
 
                 _,_,ids,_ = iml.search(
@@ -121,19 +141,18 @@ def main(
                 if y>0 and y<h and x>0 and x<w:
                     chars[y][x] = 'X'
 
-                # return '\n'.join(''.join(row) for row in chars)
-                if self._colors is None:
-                    self.set_colors()
+                if self.render_map:
+                    if self._colors is None:
+                        self.set_colors()
 
-                t = Text()
-                for trow, crow in zip(chars, self._colors):
-                    for ch,(r,g,b) in zip(trow, crow):
-                        # use of rgb() seems to be limiting performance here...
-                        t.append(ch, style=f'black on rgb({r},{g},{b})')
-                        # t.append(ch, style=f'black on white')
-                    t.append('\n')
-
-                return t
+                    t = Text()
+                    for trow, crow in zip(chars, self._colors):
+                        for ch,style in zip(trow, crow):
+                            t.append(ch, style=style)
+                        t.append('\n')
+                    return t
+                else:
+                    return '\n'.join(''.join(row) for row in chars)
 
     class IMLState(Static):
         value = reactive((None,None))
@@ -141,7 +160,7 @@ def main(
             src, tgt = self.value
             self.update(Panel(f'src: {src}\ntgt: {tgt}', title='state'))
 
-    class IMLTUI(TUI):
+    class IMLTUI(ii.TUI):
         CSS_PATH = 'tui.css'
 
         BINDINGS = [
@@ -149,6 +168,9 @@ def main(
             ("i", "inside", "randomize inside"),
             ("o", "outside", "randomize outside"),
             ("d", "delete", "delete near"),
+            ("m", "toggle_map", "render anguilla map"),
+            ("k", "k_inc", "increment k"),
+            ("j", "k_dec", "decrement k"),
         ]
 
         def __init__(self):
@@ -172,14 +194,38 @@ def main(
 
     iml = ag.IML()
 
+    # @ii.profile(print=tui.print, enable=profile)
     def update_z():
         z[:] = torch.from_numpy(iml.map(ctrl, k=k))
         rave_process(z=z)
         tui(state=(
             ' '.join(f'{x.item():+0.2f}' for x in ctrl),
             ' '.join(f'{x.item():+0.2f}' for x in z)))
+        
+    @tui.set_action
+    def k_inc():
+        nonlocal k
+        k += 1
+        update_z()
+        tui.ctrl_pad.set_colors()
+        tui.ctrl_pad.refresh()
+    @tui.set_action
+    def k_dec():
+        nonlocal k
+        if k>2:
+            k -= 1
+            update_z()
+            tui.ctrl_pad.set_colors()
+            tui.ctrl_pad.refresh()
 
     @tui.set_action
+    def toggle_map():
+        tui.ctrl_pad.render_map = not tui.ctrl_pad.render_map
+        tui.ctrl_pad.refresh()
+
+
+    @tui.set_action
+    @ii.profile(print=tui.print, enable=profile)
     def delete():
         _, _, ids, scores = iml.search(ctrl, k=k)
         if len(ids) < len(iml.pairs):
@@ -189,6 +235,7 @@ def main(
             tui.ctrl_pad.refresh()
 
     @tui.set_action
+    @ii.profile(print=tui.print, enable=profile)
     def randomize(mode=None):
         # keep the current nearest neighbors and rerandomize the rest
         # print('randomize:')
@@ -225,9 +272,9 @@ def main(
             elif mode=='in':
                 if dist > max_score:
                     continue
-                tgt = torch.randn(d_tgt)
+                tgt = torch.randn(d_tgt)*1.5
             else:
-                tgt = torch.randn(d_tgt)
+                tgt = torch.randn(d_tgt)*1.5
             iml.add(src, tgt)
 
         update_z()
@@ -252,4 +299,4 @@ def main(
 
 
 if __name__=='__main__':
-    run(main)
+    ii.run(main)
