@@ -18,7 +18,7 @@ def main(**kwargs):
 
     @ti.kernel
     def draw(s: ti.template()):
-        tv.px.stamp(gx, gy, s)
+        tv.px.stamp_f(gx, gy, s)
 
     @ti.kernel
     def cells_to_flock():
