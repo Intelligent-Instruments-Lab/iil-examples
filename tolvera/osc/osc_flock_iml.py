@@ -4,9 +4,8 @@ def main(**kwargs):
     tv = Tolvera(**kwargs)
 
     tv.iml.osc2flock_s = {
-        'type': 'osc2fun', 
         'size': (4, tv.s.flock_s.size), 
-        'io': ('tolvera/flock/iml', tv.s.flock_s.from_vec),
+        'io': (str, tv.s.flock_s.from_vec),
         'randomise': True,
     }
 

@@ -59,8 +59,8 @@ def main(**kwargs):
     tv = Tolvera(**kwargs)
     size = (2, 1)
     tv.iml.test2test = {
-        'type': 'vec2vec',
-        'size': size,
+        'size': (size, size),
+        'io': (None, None),
         'randomise': True,
         # 'rand_method': 'uniform',
         # 'rand_kwargs': {'low': -d, 'high': d},

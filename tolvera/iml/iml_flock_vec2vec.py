@@ -15,8 +15,8 @@ def main(**kwargs):
     tv = Tolvera(**kwargs)
 
     tv.iml.flock_p2flock_s = {
-        'type': 'vec2vec', 
         'size': (tv.s.flock_p.size, tv.s.flock_s.size), 
+        'io': (list, list),
         'randomise': True,
         'config': {'interpolate': 'Ripple'},
         'map_kw': {'k': 10, 'ripple_depth': 5, 'ripple': 5}

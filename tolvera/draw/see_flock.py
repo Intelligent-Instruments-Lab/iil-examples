@@ -37,7 +37,7 @@ def main(**kwargs):
                 b)
             tv.px.circle(
                 p1.pos.x, p1.pos.y, 
-                fp.nearby,
+                fp.nearby/10,
                 c)
 
     @tv.render
