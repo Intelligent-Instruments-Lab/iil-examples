@@ -17,7 +17,6 @@ def main(**kwargs):
         tv.s.from_vec(states, vec)
 
     tv.iml.particles_pos2states = {
-        'type': 'fun2fun', 
         'size': ((tv.pn, 2), tv.s.get_size(states)), 
         'io': (tv.p.get_pos_all_2d, states_from_vec),
         'randomise': True,
@@ -26,7 +25,6 @@ def main(**kwargs):
     @tv.render
     def _():
         tv.px.diffuse(0.99)
-        tv.p()
         tv.v.flock(tv.p)
         tv.px.particles(tv.p, tv.s.species, 'circle')
         return tv.px
