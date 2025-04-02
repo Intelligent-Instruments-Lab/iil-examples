@@ -1,4 +1,5 @@
 from tolvera import Tolvera, run
+import taichi as ti
 
 def main(**kwargs):
     tv = Tolvera(**kwargs)
@@ -9,10 +10,20 @@ def main(**kwargs):
         nonlocal attract
         attract['m'], attract['r'] = m, r
         print(f"[Attractor] mass: {m} radius: {r}")
+
+    # Create an integer Taichi object to keep track of the count - to maintain similar functionality as return [tv.s.flock_p[0].nearby]
+    nearby_count =  ti.field(ti.i32, shape=1) 
+
+    # A function to update_count within taichi scope, to avoid "Taichi functions cannot be called from python scope" error.
+    @ti.kernel
+    def update_nearby_count():
+        nearby_count[0] = tv.s.flock_p[0].nearby
     
     @tv.osc.map.send_args(p0=(0,0,tv.pn), count=5, send_mode='broadcast')
     def attractor_nearby() -> list[int]:
-        return [tv.s.flock_p[0].nearby]
+        # Work around to avoid taichi-scope error
+        update_nearby_count()  
+        return [nearby_count[0]] 
 
     @tv.render
     def _():
