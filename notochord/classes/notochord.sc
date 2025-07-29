@@ -219,7 +219,7 @@ Notochord {
 				pendingQueries = 0;
 			};
 
-		}, "notochord/query_return").permanent_(true);
+		}, "/return/notochord/query").permanent_(true);
 
 		notochordEnv = "iil-python-tools"; //default conda env for notochord
 
