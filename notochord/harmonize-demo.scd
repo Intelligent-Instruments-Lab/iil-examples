@@ -57,12 +57,12 @@ NotoFluidOutput.startFluidSynth(soundFontPath: "/Users/victor/soundfonts/Timbres
 		//(which will be played when it returns from Notochord)
 		~player_held.add(handle -> \pending);
 		~noto.feedQueryFeed(
-			\inst, inst, \pitch, pitch, \time, dt, \vel, vel,
+			inst, pitch, dt, vel,
 			\next_inst, ~noto_inst, \next_time, 0, \next_vel, vel,
 			\handle, handle, *~noto.globalArgs)
 	};
 	feed.if{
-		~noto.feed(\inst, inst, \pitch, pitch, \time, dt, \vel, vel)
+		~noto.feed(inst, pitch, dt, vel)
 	};
 
 };
