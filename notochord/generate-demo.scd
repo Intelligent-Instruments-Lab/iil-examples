@@ -90,7 +90,7 @@ NotoFluidOutput.startFluidSynth(soundFontPath: "/Users/victor/soundfonts/Timbres
     //get a new prediction in light of current note
 	~exclude_inst = ~player_inst!?([_]);
     ~noto.feedQuery(
-		\inst, inst, \pitch, pitch, \time, dt, \vel, vel,
+		inst, pitch, dt, vel,
 		\handle, event_time, *~noto.globalArgs);
 
     ~step = ~step + 1;
