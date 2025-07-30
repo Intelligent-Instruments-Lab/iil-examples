@@ -62,7 +62,7 @@ NotoFluidOutput.startFluidSynth(soundFontPath: "/Users/victor/soundfonts/Timbres
 			\handle, handle, *~noto.globalArgs)
 	};
 	feed.if{
-		~noto.feed(\inst, inst, \pitch, pitch, \time, dt, \vel, vel)
+		~noto.feed(inst, pitch, dt, vel)
 	};
 
 };
