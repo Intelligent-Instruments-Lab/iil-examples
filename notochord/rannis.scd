@@ -103,7 +103,7 @@ MIDIdef.freeAll;
 	// ~include_inst = ~noto_inst++~soft_gate.if{[~player_inst, ~player_drum]}{[]};
 	~include_inst = ~noto_inst++[~player_inst, ~player_drum].reject(_.isNil);
 	~noto.feedQuery(
-		\inst, inst, \pitch, pitch, \time, dt, \vel, vel,
+		inst, pitch, dt, vel,
 		\handle, event_time, *~noto.globalArgs);
 
     ~step = ~step + 1;
