@@ -105,7 +105,7 @@ s.waitForBoot{
 		~synths[key].release(0.3);
 		// feed the note-off
 		~noto.feed(
-			\inst, ~instrument, \pitch, ~pitches[key], \vel, 0, \time, dt
+			~instrument, ~pitches[key], 0, dt
 		);
 	}{
 		var pitch_args = idx.notNil.if{[\index_pitch, idx]}{[]};
