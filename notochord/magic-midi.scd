@@ -89,7 +89,7 @@ NotoFluidOutput.startFluidSynth(soundFontPath: "/Users/victor/soundfonts/Timbres
 			~player_held.add(handle -> [res[\inst], res[\pitch]]);
 		};
 	}{
-		~noto.feed(\inst, inst, \pitch, pitch, \time, dt, \vel, vel);
+		~noto.feed(inst, pitch, dt, vel);
 		//play the note
 		~output.send(inst, pitch, vel);
 	};
